@@ -1,0 +1,132 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root {
+	font-family: 'Press Start 2P', monospace;
+	color: #eee;
+	background: #111;
+}
+
+body {
+	margin: 0;
+	background:
+		linear-gradient(#111 50%, #151515 50%);
+	background-size: 100% 4px;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+main {
+	max-width: 900px;
+	margin: auto;
+	padding: 40px 20px;
+}
+
+.hero {
+	min-height: 70vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.logo {
+	font-size: 14px;
+	margin-bottom: 40px;
+}
+
+h1 {
+	font-size: clamp(28px, 6vw, 64px);
+	line-height: 1.2;
+	margin: 0 0 25px;
+}
+
+h2 {
+	font-size: 16px;
+}
+
+.subtitle {
+	max-width: 550px;
+	line-height: 2;
+	font-size: 12px;
+}
+
+.button {
+	display: inline-block;
+	width: fit-content;
+	margin-top: 30px;
+	padding: 16px 20px;
+	border: 3px solid #eee;
+	box-shadow: 6px 6px 0 rgb(0, 225, 0);
+	background: #111;
+}
+
+.button:hover {
+	background: #eee;
+	color: #111;
+    border: 3px solid rgb(0, 225, 0);
+	box-shadow: 3px 3px 0 rgb(0, 185, 0);
+}
+
+.rooms {
+	margin-bottom: 80px;
+}
+
+.room {
+	display: flex;
+	justify-content: space-between;
+	gap: 20px;
+	padding: 20px;
+	margin: 12px 0;
+	border: 2px solid #555;
+}
+
+.room:hover {
+	border-color: rgb(0, 225, 0);
+}
+
+.room span,
+.user,
+small {
+	font-size: 10px;
+	color: #888;
+}
+
+header {
+	display: flex;
+	justify-content: space-between;
+	border-bottom: 2px solid #555;
+	padding-bottom: 20px;
+	margin-bottom: 40px;
+	font-size: 11px;
+}
+
+.player {
+	border: 3px solid #eee;
+	aspect-ratio: 16 / 9;
+	display: grid;
+	place-items: center;
+}
+
+.screen {
+	text-align: center;
+}
+
+.screen span {
+	display: block;
+	font-size: 20px;
+	margin-bottom: 20px;
+}
+
+.info {
+	display: flex;
+	justify-content: space-between;
+	gap: 40px;
+	margin-top: 30px;
+}
+
+.about {
+	max-width: 600px;
+	line-height: 2;
+}
