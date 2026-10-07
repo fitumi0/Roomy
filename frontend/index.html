@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестирование WebSocket</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+            background-color: #f5f5f7;
+            color: #333;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-connect { background-color: #007aff; color: white; }
+        .btn-connect:hover { background-color: #0056b3; }
+        .btn-disconnect { background-color: #ff3b30; color: white; }
+        .btn-disconnect:hover { background-color: #c91f16; }
+        .btn-send { background-color: #34c759; color: white; }
+        .btn-send:hover { background-color: #248a3d; }
+        
+        #status {
+            font-weight: bold;
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .status-disconnected { background-color: #ffe5e5; color: #d9383a; }
+        .status-connected { background-color: #e5f9e7; color: #1e7e34; }
+        
+        #log {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 15px;
+            border-radius: 4px;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 13px;
+        }
+        .log-in { color: #4fc1ff; }
+        .log-out { color: #b5cea8; }
+        .log-sys { color: #858585; }
+        .log-err { color: #f44747; }
+    </style>
+</head>
+<body>
+
+    <h2>Панель отладки WebSocket</h2>
+
+    <!-- Блок подключения -->
+    <div class="card">
+        <div class="form-group">
+            <input type="text" id="serverUrl" value="ws://localhost:8080/ws">
+            <button id="connectBtn" class="btn-connect" onclick="toggleConnection()">Подключиться</button>
+        </div>
+        <div>
+            Статус: <span id="status" class="status-disconnected">Отключено</span>
+        </div>
+    </div>
+
+    <!-- Блок отправки -->
+    <div class="card">
+        <div class="form-group">
+            <input type="text" id="messageInput" placeholder="Введите сообщение для отправки..." disabled>
+            <button id="sendBtn" class="btn-send" onclick="sendMessage()" disabled>Отправить</button>
+        </div>
+    </div>
+
+    <!-- Блок логов -->
+    <div class="card">
+        <h3>Лог событий</h3>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        let socket = null;
+        
+        const serverUrlInput = document.getElementById('serverUrl');
+        const connectBtn = document.getElementById('connectBtn');
+        const statusSpan = document.getElementById('status');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const logDiv = document.getElementById('log');
+
+        function appendLog(text, type = 'sys') {
+            const time = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = `log-${type}`;
+            line.textContent = `[${time}] ${text}`;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function toggleConnection() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                appendLog('Закрытие соединения пользователем...', 'sys');
+                socket.close();
+            } else {
+                connect();
+            }
+        }
+
+        function connect() {
+            const url = serverUrlInput.value.trim();
+            appendLog(`Попытка подключения к ${url}...`, 'sys');
+            
+            try {
+                // Создаем нативное WebSocket подключение
+                socket = new WebSocket(url);
+            } catch (e) {
+                appendLog(`Ошибка при инициализации WebSocket: ${e.message}`, 'err');
+                return;
+            }
+
+            socket.onopen = (event) => {
+                statusSpan.textContent = 'Подключено';
+                statusSpan.className = 'status-connected';
+                connectBtn.textContent = 'Отключиться';
+                connectBtn.className = 'btn-disconnect';
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                appendLog('Соединение успешно установлено!', 'sys');
+            };
+
+            socket.onmessage = (event) => {
+                appendLog(`ПОЛУЧЕНО: ${event.data}`, 'in');
+                console.log('Received message:', event.data);
+            };
+
+            socket.onclose = (event) => {
+                statusSpan.textContent = 'Отключено';
+                statusSpan.className = 'status-disconnected';
+                connectBtn.textContent = 'Подключиться';
+                connectBtn.className = 'btn-connect';
+                messageInput.disabled = true;
+                sendBtn.disabled = true;
+                
+                let reason = event.reason ? ` Причина: ${event.reason}` : '';
+                appendLog(`Соединение закрыто (Код: ${event.code}).${reason}`, 'sys');
+            };
+
+            socket.onerror = (error) => {
+                appendLog('Произошла ошибка WebSocket! Проверьте консоль браузера (F12).', 'err');
+                console.error('WebSocket Error:', error);
+            };
+        }
+
+        function sendMessage() {
+            const msg = messageInput.value;
+            if (!msg) return;
+            
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(msg);
+                appendLog(`ОТПРАВЛЕНО: ${msg}`, 'out');
+                messageInput.value = '';
+            } else {
+                appendLog('Не удалось отправить: нет активного подключения', 'err');
+            }
+        }
+
+        // Позволяет отправлять сообщения по нажатию Enter
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
